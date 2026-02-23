@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "pages:build": "npx @cloudflare/next-on-pages"
+    "pages:build": "npx @opennextjs/cloudflare build",
+    "preview": "npx @opennextjs/cloudflare build && npx @opennextjs/cloudflare preview",
+    "deploy:web": "npx @opennextjs/cloudflare build && npx @opennextjs/cloudflare deploy"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.17.0",
