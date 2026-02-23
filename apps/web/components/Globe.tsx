@@ -1,13 +1,16 @@
 "use client";
 
 import { useRef, useMemo, useCallback, Suspense } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, useTexture } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import R3fGlobe from "r3f-globe";
 import * as THREE from "three";
 import { usePlanetStore } from "@/lib/planet-store";
 import { pointToLatLng } from "@/lib/latlng";
 import { latLngFromTileId } from "@orbis/shared";
 import type { TreeEntity, StructureEntity } from "@orbis/shared";
+
+const GLOBE_RADIUS = 100;
 
 function latLngToVector3(lat: number, lng: number, radius: number) {
   const phi = ((90 - lat) * Math.PI) / 180;
@@ -18,6 +21,10 @@ function latLngToVector3(lat: number, lng: number, radius: number) {
     radius * Math.sin(phi) * Math.sin(theta)
   );
 }
+
+// ESRI World Imagery - free satellite tiles, Google Earth-like quality
+const tileUrl = (x: number, y: number, l: number) =>
+  `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${l}/${y}/${x}`;
 
 function Entities({ radius }: { radius: number }) {
   const entitiesRecord = usePlanetStore((s) => s.entities);
@@ -39,7 +46,7 @@ function Entities({ radius }: { radius: number }) {
     <group raycast={() => null}>
       {trees.map((tree) => {
         const pos = latLngToVector3(tree.lat, tree.lng, radius);
-        const scale = 0.015 + tree.growthStage * 0.02;
+        const scale = 1.5 + tree.growthStage * 2;
         return (
           <mesh key={tree.id} position={pos}>
             <coneGeometry args={[scale, scale * 2, 6]} />
@@ -49,7 +56,7 @@ function Entities({ radius }: { radius: number }) {
       })}
       {structures.map((struct) => {
         const pos = latLngToVector3(struct.lat, struct.lng, radius);
-        const scale = 0.02;
+        const scale = 2;
         return (
           <mesh key={struct.id} position={pos}>
             <boxGeometry args={[scale, scale * 1.5, scale]} />
@@ -58,38 +65,6 @@ function Entities({ radius }: { radius: number }) {
         );
       })}
     </group>
-  );
-}
-
-// unpkg doesn't include example textures; use jsdelivr from the GitHub repo
-const EARTH_TEXTURE_URL =
-  "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r169/examples/textures/planets/earth_atmos_2048.jpg";
-
-function EarthSphereFallback({
-  radius,
-  onPointClick,
-}: {
-  radius: number;
-  onPointClick: (lat: number, lng: number) => void;
-}) {
-  const handleClick = useCallback(
-    (e: { stopPropagation: () => void; point: THREE.Vector3 }) => {
-      e.stopPropagation();
-      const { lat, lng } = pointToLatLng(e.point);
-      onPointClick(lat, lng);
-    },
-    [onPointClick]
-  );
-  return (
-    <mesh
-      position={[0, 0, 0]}
-      onClick={handleClick}
-      onPointerDown={(e) => e.stopPropagation()}
-      receiveShadow
-    >
-      <sphereGeometry args={[radius, 64, 64]} />
-      <meshStandardMaterial color="#1e3a5f" roughness={0.8} metalness={0.05} />
-    </mesh>
   );
 }
 
@@ -109,15 +84,13 @@ function ClickRipple({ radius }: { radius: number }) {
       return;
     }
     const progress = age / EFFECT_DURATION_MS;
-    const scale = 0.03 + progress * 0.5;
+    const scale = 3 + progress * 50;
     meshRef.current.scale.setScalar(scale);
     matRef.current.opacity = 1 - progress;
     meshRef.current.lookAt(0, 0, 0);
   });
 
   if (!effect) return null;
-  const age = Date.now() - effect.timestamp;
-  if (age > EFFECT_DURATION_MS) return null;
 
   const pos = latLngToVector3(effect.lat, effect.lng, radius);
   const color =
@@ -156,7 +129,7 @@ function TerraformingCircle({
   });
   return (
     <mesh ref={ref} position={pos}>
-      <circleGeometry args={[0.08, 16]} />
+      <circleGeometry args={[8, 16]} />
       <meshBasicMaterial
         color={color}
         transparent
@@ -181,7 +154,7 @@ function TerraformingOverlay({ radius }: { radius: number }) {
     <group raycast={() => null}>
       {tilesArray.map((tile) => {
         const { lat, lng } = latLngFromTileId(tile.tileId);
-        const pos = latLngToVector3(lat, lng, radius + 0.001);
+        const pos = latLngToVector3(lat, lng, radius + 0.1);
         const moistureAlpha = Math.max(0, (tile.moisture - 0.5) * 2);
         const fertilityAlpha = Math.max(0, (tile.fertility - 0.55) * 2);
         const alpha = Math.min(0.5, moistureAlpha * 0.4 + fertilityAlpha * 0.3);
@@ -200,38 +173,16 @@ function TerraformingOverlay({ radius }: { radius: number }) {
   );
 }
 
-function EarthSphere({
-  radius,
-  onPointClick,
+function PovUpdater({
+  globeRef,
 }: {
-  radius: number;
-  onPointClick: (lat: number, lng: number) => void;
+  globeRef: React.RefObject<{ setPointOfView?: (camera: THREE.Camera) => void } | null>;
 }) {
-  const [colorMap] = useTexture([EARTH_TEXTURE_URL]);
-  const handleClick = useCallback(
-    (e: { stopPropagation: () => void; point: THREE.Vector3 }) => {
-      e.stopPropagation();
-      const { lat, lng } = pointToLatLng(e.point);
-      onPointClick(lat, lng);
-    },
-    [onPointClick]
-  );
-
-  return (
-    <mesh
-      position={[0, 0, 0]}
-      onClick={handleClick}
-      onPointerDown={(e) => e.stopPropagation()}
-      receiveShadow
-    >
-      <sphereGeometry args={[radius, 64, 64]} />
-      <meshStandardMaterial
-        map={colorMap}
-        roughness={0.8}
-        metalness={0.1}
-      />
-    </mesh>
-  );
+  const { camera } = useThree();
+  useFrame(() => {
+    globeRef.current?.setPointOfView?.(camera);
+  });
+  return null;
 }
 
 function Scene({
@@ -239,23 +190,40 @@ function Scene({
 }: {
   onPointClick: (lat: number, lng: number) => void;
 }) {
-  const radius = 1;
+  const globeRef = useRef<{ setPointOfView?: (camera: THREE.Camera) => void } | null>(null);
+
+  const handleGlobeClick = useCallback(
+    (_layer: string, _elementData: unknown, event: { point?: THREE.Vector3 }) => {
+      const point = event?.point;
+      if (point) {
+        const { lat, lng } = pointToLatLng(point);
+        onPointClick(lat, lng);
+      }
+    },
+    [onPointClick]
+  );
 
   return (
     <>
       <ambientLight intensity={0.4} />
-      <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
-      <Suspense fallback={<EarthSphereFallback radius={radius} onPointClick={onPointClick} />}>
-        <EarthSphere radius={radius} onPointClick={onPointClick} />
-      </Suspense>
-      <Entities radius={radius + 0.02} />
-      <TerraformingOverlay radius={radius} />
-      <ClickRipple radius={radius} />
+      <directionalLight position={[500, 500, 500]} intensity={1} />
+      <R3fGlobe
+        ref={globeRef}
+        globeTileEngineUrl={tileUrl}
+        showGlobe={true}
+        showAtmosphere={true}
+        atmosphereColor="lightskyblue"
+        onClick={handleGlobeClick}
+      />
+      <PovUpdater globeRef={globeRef} />
+      <Entities radius={GLOBE_RADIUS + 2} />
+      <TerraformingOverlay radius={GLOBE_RADIUS} />
+      <ClickRipple radius={GLOBE_RADIUS} />
       <OrbitControls
         enableZoom
         enablePan
-        minDistance={0.15}
-        maxDistance={8}
+        minDistance={GLOBE_RADIUS * 0.2}
+        maxDistance={GLOBE_RADIUS * 8}
         autoRotate
         autoRotateSpeed={0.3}
       />
@@ -271,7 +239,12 @@ export function Globe({
   return (
     <div className="absolute inset-0 bg-[#0a0f1a]">
       <Canvas
-        camera={{ position: [0, 0, 2.5], fov: 45 }}
+        camera={{
+          position: [0, 0, GLOBE_RADIUS * 2.5],
+          fov: 45,
+          near: 0.1,
+          far: GLOBE_RADIUS * 20,
+        }}
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
