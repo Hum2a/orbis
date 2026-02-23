@@ -23,22 +23,48 @@ export function Map2D({
   const tiles = usePlanetStore((s) => s.tiles);
   const lastActionEffect = usePlanetStore((s) => s.lastActionEffect);
   const clearActionEffect = usePlanetStore((s) => s.clearActionEffect);
+  const setMapView = usePlanetStore((s) => s.setMapView);
 
   // Create map imperatively — full control over init/cleanup
+  // mapView intentionally excluded: we read via getState() to avoid remount on pan
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    const mapView = usePlanetStore.getState().mapView;
+    const [center, zoom] = mapView
+      ? [mapView.center, mapView.zoom]
+      : [[51.5, -0.1], 5];
+
     const map = L.map(container, {
-      center: [51.5, -0.1],
-      zoom: 5,
+      center: center as [number, number],
+      zoom,
       attributionControl: false,
     });
 
     L.tileLayer(TILE_URL).addTo(map);
 
+    // Only place on real clicks — ignore drags, pans, zooms (which can fire click after release)
+    const DRAG_THRESHOLD_PX = 5;
+    let pointerDownPos: { x: number; y: number } | null = null;
+
+    map.on("mousedown", (e) => {
+      pointerDownPos = { x: e.originalEvent.clientX, y: e.originalEvent.clientY };
+    });
     map.on("click", (e) => {
-      onPointClick(e.latlng.lat, e.latlng.lng);
+      if (!pointerDownPos) return;
+      const dx = e.originalEvent.clientX - pointerDownPos.x;
+      const dy = e.originalEvent.clientY - pointerDownPos.y;
+      if (dx * dx + dy * dy <= DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) {
+        onPointClick(e.latlng.lat, e.latlng.lng);
+      }
+      pointerDownPos = null;
+    });
+
+    // Preserve view when user pans/zooms — prevents zoom-out when placing
+    map.on("moveend", () => {
+      const c = map.getCenter();
+      setMapView({ center: [c.lat, c.lng], zoom: map.getZoom() });
     });
 
     mapRef.current = map;
@@ -47,7 +73,7 @@ export function Map2D({
       map.remove();
       mapRef.current = null;
     };
-  }, [onPointClick]);
+  }, [onPointClick, setMapView]);
 
   // Update overlays when store changes
   const updateOverlays = useCallback(() => {

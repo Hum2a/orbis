@@ -21,6 +21,8 @@ interface PlanetState {
   actionMode: "plant" | "water" | "build";
   lastActionEffect: ActionEffect | null;
   zoomMagnification: number;
+  /** Preserved map view (2D center/zoom) — prevents zoom-out when placing or switching views */
+  mapView: { center: [number, number]; zoom: number } | null;
 
   setConnected: (connected: boolean) => void;
   setSessionId: (id: string) => void;
@@ -42,6 +44,7 @@ interface PlanetState {
   }) => void;
   setActionMode: (mode: "plant" | "water" | "build") => void;
   setZoomMagnification: (mag: number) => void;
+  setMapView: (view: { center: [number, number]; zoom: number } | null) => void;
   reset: () => void;
 }
 
@@ -56,6 +59,7 @@ const initialState = {
   actionMode: "plant" as const,
   lastActionEffect: null as ActionEffect | null,
   zoomMagnification: 1,
+  mapView: null as { center: [number, number]; zoom: number } | null,
 };
 
 export const usePlanetStore = create<PlanetState>((set) => ({
@@ -87,6 +91,7 @@ export const usePlanetStore = create<PlanetState>((set) => ({
     }),
   setActionMode: (actionMode) => set({ actionMode }),
   setZoomMagnification: (zoomMagnification) => set({ zoomMagnification }),
+  setMapView: (mapView) => set({ mapView }),
   triggerActionEffect: (lat, lng, type) =>
     set({ lastActionEffect: { lat, lng, type, timestamp: Date.now() } }),
   clearActionEffect: () => set({ lastActionEffect: null }),

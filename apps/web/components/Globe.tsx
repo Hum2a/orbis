@@ -230,16 +230,30 @@ function TerraformingOverlay({ radius }: { radius: number }) {
 }
 
 function usePovOnChange(
-  globeRef: React.RefObject<{ setPointOfView?: (camera: THREE.Camera) => void } | null>
+  globeRef: React.RefObject<{ setPointOfView?: (camera: THREE.Camera) => void } | null>,
+  controlsRef: React.RefObject<OrbitControlsImpl | null>
 ) {
   const { camera } = useThree();
+  const setMapView = usePlanetStore((s) => s.setMapView);
   return useCallback(() => {
     try {
       globeRef.current?.setPointOfView?.(camera);
     } catch {
       // Ignore - three-globe tile engine may not be ready (avoids __kapsuleInstance error)
     }
-  }, [camera, globeRef]);
+    // Sync globe view to store so 2D map restores same view when switching
+    const ctrl = controlsRef.current;
+    if (ctrl) {
+      const dist = ctrl.target.distanceTo(camera.position);
+      const dir = ctrl.target.clone().sub(camera.position).normalize();
+      const pointOnGlobe = dir.multiplyScalar(GLOBE_RADIUS);
+      const { lat, lng } = pointToLatLng(pointOnGlobe);
+      const maxDist = GLOBE_RADIUS * 8;
+      const t = Math.max(0, Math.min(1, (dist - MIN_CAMERA_DISTANCE) / (maxDist - MIN_CAMERA_DISTANCE)));
+      const zoom = Math.round(2 + 16 * (1 - t));
+      setMapView({ center: [lat, lng], zoom: Math.max(2, Math.min(18, zoom)) });
+    }
+  }, [camera, globeRef, controlsRef, setMapView]);
 }
 
 // Scale zoom sensitivity: when zoomed in (small distance), scroll does less
@@ -295,10 +309,46 @@ function Scene({
 }) {
   const globeRef = useRef<{ setPointOfView?: (camera: THREE.Camera) => void } | null>(null);
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
-  const onPovChange = usePovOnChange(globeRef);
+  const draggedRef = useRef(false);
+  const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
+  const onPovChange = usePovOnChange(globeRef, controlsRef);
 
   // Initial POV sync after mount (onChange may not fire until user interacts)
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
+
+  // Only place on real clicks — ignore drags, pans, zooms
+  useEffect(() => {
+    const el = gl.domElement;
+    const DRAG_THRESHOLD_PX = 5;
+
+    const onPointerDown = (e: PointerEvent) => {
+      pointerDownRef.current = { x: e.clientX, y: e.clientY };
+      draggedRef.current = false;
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      if (pointerDownRef.current) {
+        const dx = e.clientX - pointerDownRef.current.x;
+        const dy = e.clientY - pointerDownRef.current.y;
+        if (dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) {
+          draggedRef.current = true;
+        }
+      }
+    };
+    const onPointerUp = () => {
+      pointerDownRef.current = null;
+    };
+
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("pointercancel", onPointerUp);
+    return () => {
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("pointercancel", onPointerUp);
+    };
+  }, [gl]);
   useEffect(() => {
     const t = setTimeout(() => {
       try {
@@ -323,6 +373,7 @@ function Scene({
 
   const handleGlobeClick = useCallback(
     (_layer: string, _elementData: unknown, event: { point?: THREE.Vector3 }) => {
+      if (draggedRef.current) return;
       const point = event?.point;
       if (point) {
         const { lat, lng } = pointToLatLng(point);

@@ -97,10 +97,8 @@ export default function PlanetPage() {
 
   const setActionMode = usePlanetStore((s) => s.setActionMode);
   const [viewMode, setViewMode] = useState<"2d" | "3d">("3d");
-  const [mapKey, setMapKey] = useState(0);
 
   const setViewModeAndKey = useCallback((mode: "2d" | "3d") => {
-    if (mode === "2d") setMapKey((k) => k + 1);
     setViewMode(mode);
   }, []);
 
@@ -116,7 +114,7 @@ export default function PlanetPage() {
             </div>
           }
         >
-          <Map2D key={mapKey} onPointClick={handlePointClick} />
+          <Map2D onPointClick={handlePointClick} />
         </Suspense>
       )}
 
