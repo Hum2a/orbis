@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Humza/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/page.tsx"],"sourcesContent":["import Link from \"next/link\";\n\nexport default function Home() {\n  return (\n    <div className=\"flex min-h-screen flex-col items-center justify-center bg-[#0a0f1a] p-8\">\n      <main className=\"flex max-w-2xl flex-col items-center gap-8 text-center\">\n        <h1 className=\"text-4xl font-bold tracking-tight text-white\">\n          Orbis\n        </h1>\n        <p className=\"text-lg text-zinc-400\">\n          A shared, persistent, realtime 3D globe. Plant trees, water the land,\n          and watch the planet evolve.\n        </p>\n        <Link\n          href=\"/planet/earth-001\"\n          className=\"rounded-lg bg-emerald-600 px-6 py-3 font-medium text-white transition-colors hover:bg-emerald-500\"\n        >\n          Enter Earth\n        </Link>\n      </main>\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;;AAAA;;;AAEe,SAAS;IACtB,qBACE,2SAAC;QAAI,WAAU;kBACb,cAAA,2SAAC;YAAK,WAAU;;8BACd,2SAAC;oBAAG,WAAU;8BAA+C;;;;;;8BAG7D,2SAAC;oBAAE,WAAU;8BAAwB;;;;;;8BAIrC,2SAAC,uPAAI;oBACH,MAAK;oBACL,WAAU;8BACX;;;;;;;;;;;;;;;;;AAMT"}}]
-}

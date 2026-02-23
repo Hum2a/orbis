@@ -1,5 +1,0 @@
-{
-  "/api/nasa/epic/route": "app/api/nasa/epic/route.js",
-  "/page": "app/page.js",
-  "/planet/[planetId]/page": "app/planet/[planetId]/page.js"
-}
