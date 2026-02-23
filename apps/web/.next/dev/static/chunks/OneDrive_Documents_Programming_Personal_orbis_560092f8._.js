@@ -16,7 +16,8 @@ const initialState = {
     snapshotVersion: 0,
     serverTime: 0,
     connected: false,
-    actionMode: "plant"
+    actionMode: "plant",
+    lastActionEffect: null
 };
 const usePlanetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$zustand$2f$esm$2f$react$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["create"])((set)=>({
         ...initialState,
@@ -57,6 +58,14 @@ const usePlanetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDr
             }),
         setActionMode: (actionMode)=>set({
                 actionMode
+            }),
+        triggerActionEffect: (lat, lng, type)=>set({
+                lastActionEffect: {
+                    lat,
+                    lng,
+                    type,
+                    timestamp: Date.now()
+                }
             }),
         reset: ()=>set(initialState)
     }));
@@ -155,20 +164,20 @@ function Entities({ radius }) {
                             ]
                         }, void 0, false, {
                             fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                            lineNumber: 44,
+                            lineNumber: 45,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("meshStandardMaterial", {
                             color: "#2d5a27"
                         }, void 0, false, {
                             fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                            lineNumber: 45,
+                            lineNumber: 46,
                             columnNumber: 13
                         }, this)
                     ]
                 }, tree.id, true, {
                     fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                    lineNumber: 43,
+                    lineNumber: 44,
                     columnNumber: 11
                 }, this);
             }),
@@ -186,27 +195,27 @@ function Entities({ radius }) {
                             ]
                         }, void 0, false, {
                             fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                            lineNumber: 54,
+                            lineNumber: 55,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("meshStandardMaterial", {
                             color: "#8b7355"
                         }, void 0, false, {
                             fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                            lineNumber: 55,
+                            lineNumber: 56,
                             columnNumber: 13
                         }, this)
                     ]
                 }, struct.id, true, {
                     fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                    lineNumber: 53,
+                    lineNumber: 54,
                     columnNumber: 11
                 }, this);
             })
         ]
     }, void 0, true, {
         fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-        lineNumber: 38,
+        lineNumber: 39,
         columnNumber: 5
     }, this);
 }
@@ -247,7 +256,7 @@ function EarthSphereFallback({ radius, onPointClick }) {
                 ]
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 89,
+                lineNumber: 90,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("meshStandardMaterial", {
@@ -256,13 +265,13 @@ function EarthSphereFallback({ radius, onPointClick }) {
                 metalness: 0.05
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 90,
+                lineNumber: 91,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-        lineNumber: 83,
+        lineNumber: 84,
         columnNumber: 5
     }, this);
 }
@@ -300,7 +309,7 @@ function EarthSphere({ radius, onPointClick }) {
                 ]
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 119,
+                lineNumber: 120,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("meshStandardMaterial", {
@@ -309,13 +318,13 @@ function EarthSphere({ radius, onPointClick }) {
                 metalness: 0.1
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 120,
+                lineNumber: 121,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-        lineNumber: 113,
+        lineNumber: 114,
         columnNumber: 5
     }, this);
 }
@@ -333,7 +342,7 @@ function Scene({ onPointClick }) {
                 intensity: 0.4
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 138,
+                lineNumber: 139,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("directionalLight", {
@@ -346,7 +355,7 @@ function Scene({ onPointClick }) {
                 castShadow: true
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 139,
+                lineNumber: 140,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Suspense"], {
@@ -355,7 +364,7 @@ function Scene({ onPointClick }) {
                     onPointClick: onPointClick
                 }, void 0, false, {
                     fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                    lineNumber: 140,
+                    lineNumber: 141,
                     columnNumber: 27
                 }, void 0),
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(EarthSphere, {
@@ -363,19 +372,19 @@ function Scene({ onPointClick }) {
                     onPointClick: onPointClick
                 }, void 0, false, {
                     fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                    lineNumber: 141,
+                    lineNumber: 142,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 140,
+                lineNumber: 141,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Entities, {
                 radius: radius + 0.02
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 143,
+                lineNumber: 144,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f40$react$2d$three$2f$drei$2f$core$2f$OrbitControls$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["OrbitControls"], {
@@ -387,7 +396,7 @@ function Scene({ onPointClick }) {
                 autoRotateSpeed: 0.3
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 144,
+                lineNumber: 145,
                 columnNumber: 7
             }, this)
         ]
@@ -415,22 +424,22 @@ function Globe({ onPointClick }) {
                     onPointClick: onPointClick
                 }, void 0, false, {
                     fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                    lineNumber: 168,
+                    lineNumber: 169,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-                lineNumber: 167,
+                lineNumber: 168,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-            lineNumber: 163,
+            lineNumber: 164,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/components/Globe.tsx",
-        lineNumber: 162,
+        lineNumber: 163,
         columnNumber: 5
     }, this);
 }
@@ -843,9 +852,13 @@ function PlanetPage() {
     const planetId = params?.planetId || "earth-001";
     const { send } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$apps$2f$web$2f$lib$2f$use$2d$planet$2d$ws$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePlanetWebSocket"])(planetId);
     const { actionMode, connected } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$apps$2f$web$2f$lib$2f$planet$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePlanetStore"])();
+    const triggerActionEffect = (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$apps$2f$web$2f$lib$2f$planet$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePlanetStore"])({
+        "PlanetPage.usePlanetStore[triggerActionEffect]": (s)=>s.triggerActionEffect
+    }["PlanetPage.usePlanetStore[triggerActionEffect]"]);
     const handlePointClick = (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
         "PlanetPage.useCallback[handlePointClick]": (lat, lng)=>{
             if (!connected) return;
+            triggerActionEffect(lat, lng, actionMode);
             const requestId = crypto.randomUUID().slice(0, 8);
             if (actionMode === "plant") {
                 send({
@@ -880,7 +893,8 @@ function PlanetPage() {
         connected,
         actionMode,
         planetId,
-        send
+        send,
+        triggerActionEffect
     ]);
     const setActionMode = (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$apps$2f$web$2f$lib$2f$planet$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePlanetStore"])({
         "PlanetPage.usePlanetStore[setActionMode]": (s)=>s.setActionMode
@@ -892,7 +906,7 @@ function PlanetPage() {
                 onPointClick: handlePointClick
             }, void 0, false, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-                lineNumber: 89,
+                lineNumber: 92,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -905,19 +919,19 @@ function PlanetPage() {
                             children: "● Connected"
                         }, void 0, false, {
                             fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-                            lineNumber: 94,
+                            lineNumber: 97,
                             columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                             className: "text-amber-400",
                             children: "○ Connecting..."
                         }, void 0, false, {
                             fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-                            lineNumber: 96,
+                            lineNumber: 99,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-                        lineNumber: 92,
+                        lineNumber: 95,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -932,12 +946,12 @@ function PlanetPage() {
                                 children: mode === "plant" ? "Plant Tree" : mode === "water" ? "Water" : "Build"
                             }, mode, false, {
                                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-                                lineNumber: 101,
+                                lineNumber: 104,
                                 columnNumber: 13
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-                        lineNumber: 99,
+                        lineNumber: 102,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -949,31 +963,32 @@ function PlanetPage() {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-                        lineNumber: 114,
+                        lineNumber: 117,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(EpicDailyCard, {}, void 0, false, {
                         fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-                        lineNumber: 117,
+                        lineNumber: 120,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-                lineNumber: 91,
+                lineNumber: 94,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/OneDrive/Documents/Programming/Personal/orbis/apps/web/app/planet/[planetId]/page.tsx",
-        lineNumber: 88,
+        lineNumber: 91,
         columnNumber: 5
     }, this);
 }
-_s1(PlanetPage, "KtDLg0CXtpqydNbEDSEJsmBxA1c=", false, function() {
+_s1(PlanetPage, "8M98ZRxxw+NvKMG7kwUNsNJhWz0=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useParams"],
         __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$apps$2f$web$2f$lib$2f$use$2d$planet$2d$ws$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePlanetWebSocket"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$apps$2f$web$2f$lib$2f$planet$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePlanetStore"],
         __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$apps$2f$web$2f$lib$2f$planet$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePlanetStore"],
         __TURBOPACK__imported__module__$5b$project$5d2f$OneDrive$2f$Documents$2f$Programming$2f$Personal$2f$orbis$2f$apps$2f$web$2f$lib$2f$planet$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePlanetStore"]
     ];

@@ -46,9 +46,12 @@ export default function PlanetPage() {
   const { send } = usePlanetWebSocket(planetId);
   const { actionMode, connected } = usePlanetStore();
 
+  const triggerActionEffect = usePlanetStore((s) => s.triggerActionEffect);
+
   const handlePointClick = useCallback(
     (lat: number, lng: number) => {
       if (!connected) return;
+      triggerActionEffect(lat, lng, actionMode);
       const requestId = crypto.randomUUID().slice(0, 8);
       if (actionMode === "plant") {
         send({
@@ -79,7 +82,7 @@ export default function PlanetPage() {
         });
       }
     },
-    [connected, actionMode, planetId, send]
+    [connected, actionMode, planetId, send, triggerActionEffect]
   );
 
   const setActionMode = usePlanetStore((s) => s.setActionMode);

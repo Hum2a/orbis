@@ -1,6 +1,15 @@
 import { create } from "zustand";
 import type { TileState, Entity } from "@orbis/shared";
 
+export type ActionEffectType = "plant" | "water" | "build";
+
+interface ActionEffect {
+  lat: number;
+  lng: number;
+  type: ActionEffectType;
+  timestamp: number;
+}
+
 interface PlanetState {
   planetId: string | null;
   sessionId: string | null;
@@ -10,9 +19,12 @@ interface PlanetState {
   serverTime: number;
   connected: boolean;
   actionMode: "plant" | "water" | "build";
+  lastActionEffect: ActionEffect | null;
 
   setConnected: (connected: boolean) => void;
   setSessionId: (id: string) => void;
+  triggerActionEffect: (lat: number, lng: number, type: ActionEffectType) => void;
+  clearActionEffect: () => void;
   applySnapshot: (data: {
     planetId: string;
     snapshotVersion: number;
@@ -40,6 +52,7 @@ const initialState = {
   serverTime: 0,
   connected: false,
   actionMode: "plant" as const,
+  lastActionEffect: null as ActionEffect | null,
 };
 
 export const usePlanetStore = create<PlanetState>((set) => ({
@@ -54,7 +67,7 @@ export const usePlanetStore = create<PlanetState>((set) => ({
       tiles: data.tiles || {},
       entities: data.entities || {},
     }),
-  applyDiff: ({ seq: _seq, serverTime, tilesChanged, entitiesUpsert, entitiesRemove }) =>
+  applyDiff: ({ serverTime, tilesChanged, entitiesUpsert, entitiesRemove }) =>
     set((state) => {
       const tiles = { ...state.tiles };
       for (const t of tilesChanged || []) {
@@ -70,5 +83,8 @@ export const usePlanetStore = create<PlanetState>((set) => ({
       return { tiles, entities, serverTime };
     }),
   setActionMode: (actionMode) => set({ actionMode }),
+  triggerActionEffect: (lat, lng, type) =>
+    set({ lastActionEffect: { lat, lng, type, timestamp: Date.now() } }),
+  clearActionEffect: () => set({ lastActionEffect: null }),
   reset: () => set(initialState),
 }));

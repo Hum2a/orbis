@@ -1,11 +1,12 @@
 "use client";
 
 import { useRef, useMemo, useCallback, Suspense } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { usePlanetStore } from "@/lib/planet-store";
 import { pointToLatLng } from "@/lib/latlng";
+import { latLngFromTileId } from "@orbis/shared";
 import type { TreeEntity, StructureEntity } from "@orbis/shared";
 
 function latLngToVector3(lat: number, lng: number, radius: number) {
@@ -92,6 +93,113 @@ function EarthSphereFallback({
   );
 }
 
+const EFFECT_DURATION_MS = 800;
+
+function ClickRipple({ radius }: { radius: number }) {
+  const effect = usePlanetStore((s) => s.lastActionEffect);
+  const clearEffect = usePlanetStore((s) => s.clearActionEffect);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const matRef = useRef<THREE.MeshBasicMaterial>(null);
+
+  useFrame(() => {
+    if (!effect || !meshRef.current || !matRef.current) return;
+    const age = Date.now() - effect.timestamp;
+    if (age > EFFECT_DURATION_MS) {
+      clearEffect();
+      return;
+    }
+    const progress = age / EFFECT_DURATION_MS;
+    const scale = 0.03 + progress * 0.5;
+    meshRef.current.scale.setScalar(scale);
+    matRef.current.opacity = 1 - progress;
+    meshRef.current.lookAt(0, 0, 0);
+  });
+
+  if (!effect) return null;
+  const age = Date.now() - effect.timestamp;
+  if (age > EFFECT_DURATION_MS) return null;
+
+  const pos = latLngToVector3(effect.lat, effect.lng, radius);
+  const color =
+    effect.type === "plant"
+      ? "#22c55e"
+      : effect.type === "water"
+        ? "#3b82f6"
+        : "#a16207";
+
+  return (
+    <mesh ref={meshRef} position={pos}>
+      <ringGeometry args={[0.8, 1, 32]} />
+      <meshBasicMaterial
+        ref={matRef}
+        color={color}
+        transparent
+        opacity={1}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
+
+function TerraformingCircle({
+  pos,
+  color,
+  alpha,
+}: {
+  pos: THREE.Vector3;
+  color: string;
+  alpha: number;
+}) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    if (ref.current) ref.current.lookAt(0, 0, 0);
+  });
+  return (
+    <mesh ref={ref} position={pos}>
+      <circleGeometry args={[0.08, 16]} />
+      <meshBasicMaterial
+        color={color}
+        transparent
+        opacity={alpha}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
+
+function TerraformingOverlay({ radius }: { radius: number }) {
+  const tiles = usePlanetStore((s) => s.tiles);
+  const tilesArray = useMemo(
+    () =>
+      Object.values(tiles).filter(
+        (t) => t.moisture > 0.55 || t.fertility > 0.6
+      ),
+    [tiles]
+  );
+
+  return (
+    <group raycast={() => null}>
+      {tilesArray.map((tile) => {
+        const { lat, lng } = latLngFromTileId(tile.tileId);
+        const pos = latLngToVector3(lat, lng, radius + 0.001);
+        const moistureAlpha = Math.max(0, (tile.moisture - 0.5) * 2);
+        const fertilityAlpha = Math.max(0, (tile.fertility - 0.55) * 2);
+        const alpha = Math.min(0.5, moistureAlpha * 0.4 + fertilityAlpha * 0.3);
+        if (alpha < 0.05) return null;
+        const color = moistureAlpha > fertilityAlpha ? "#3b82f6" : "#22c55e";
+        return (
+          <TerraformingCircle
+            key={tile.tileId}
+            pos={pos}
+            color={color}
+            alpha={alpha}
+          />
+        );
+      })}
+    </group>
+  );
+}
+
 function EarthSphere({
   radius,
   onPointClick,
@@ -141,11 +249,13 @@ function Scene({
         <EarthSphere radius={radius} onPointClick={onPointClick} />
       </Suspense>
       <Entities radius={radius + 0.02} />
+      <TerraformingOverlay radius={radius} />
+      <ClickRipple radius={radius} />
       <OrbitControls
         enableZoom
         enablePan
-        minDistance={1.5}
-        maxDistance={5}
+        minDistance={0.15}
+        maxDistance={8}
         autoRotate
         autoRotateSpeed={0.3}
       />
