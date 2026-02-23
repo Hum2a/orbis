@@ -5,8 +5,8 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@orbis/shared"],
   reactStrictMode: true,
   turbopack: {
-    // Monorepo: Next.js is in apps/web, ensure Turbopack resolves from here
-    root: path.join(__dirname),
+    // Monorepo: set root to repo root so Turbopack finds next in apps/web/node_modules
+    root: path.resolve(__dirname, "..", ".."),
   },
 };
 
