@@ -1,42 +1,206 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+.pnpm-store
+.npm
+bower_components
+jspm_packages
 
 # testing
-/coverage
+coverage
+.nyc_output
+*.lcov
+.jest
+jest-cache
+test-results
+playwright-report
+playwright/.cache
+.cypress
+cypress/videos
+cypress/screenshots
+cypress/downloads
+.vitest
+karma-coverage
+*.coverage
+htmlcov
+.pytest_cache
+.tox
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
-# production
-/build
+# production / build
+build
+dist
+*.tsbuildinfo
+.release
+release/
+*.min.js
+*.min.css
 
-# misc
-.DS_Store
-*.pem
+# typescript
+next-env.d.ts
+
+# env files (can opt-in for committing if needed)
+.env
+.env.*
+!.env.example
+!.env*.example
+.dev.vars
+
+# vercel
+.vercel
+
+# cloudflare
+.wrangler/
+
+# netlify / amplify / firebase
+.netlify
+.amplify
+.firebase
+.firebaserc
+
+# turbo (monorepo)
+.turbo
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-.dev.vars
+# misc
+.DS_Store
+*.pem
+*.log
+logs/
+*.tmp
+*.temp
+.tmp
+.temp
+tmp/
+temp/
+*.bak
+*.backup
+*.orig
+*.rej
+*.swp
 
-# vercel
-.vercel
+# IDE / editor
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# OS
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.directory
+
+# cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# bundlers / frameworks
+.vite
+.vuepress
+.nuxt
+.output
+.astro
+.expo
+.expo-shared
+.metro
+.docusaurus
+.serverless
+.fusebox
+.webpack
+.rollup.cache
+.rts2_cache_*
+storybook-static
+
+# secrets / credentials
+*.key
+*.p12
+*.pfx
+*.pem
+credentials.json
+.credentials
+*.crt
+*.cer
+
+# optional
+.sentryclirc
+
+# database
+*.db
+*.sqlite
+*.sqlite3
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# docker
+.docker/
+
+# python (if used for scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv
+venv/
+ENV/
+.mypy_cache/
+.ruff_cache/
+
+# rust
+target/
+
+# java / kotlin / gradle
+.gradle/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+
+# ruby
+.bundle
+vendor/bundle
+
+# php
+vendor/
+
+# go
+vendor/
+
+# lighthouse / perf
+.lighthouseci
+lighthouse-report/
+*.lighthouse.html
