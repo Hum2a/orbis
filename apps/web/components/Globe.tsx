@@ -13,6 +13,10 @@ import type { TreeEntity, StructureEntity } from "@orbis/shared";
 
 const GLOBE_RADIUS = 100;
 
+// Cap max zoom at 8× — beyond this the tile engine stops rendering and shows water
+const MAX_ZOOM_MAGNIFICATION = 8;
+const MIN_CAMERA_DISTANCE = GLOBE_RADIUS * 8 / MAX_ZOOM_MAGNIFICATION;
+
 function latLngToVector3(lat: number, lng: number, radius: number) {
   const phi = ((90 - lat) * Math.PI) / 180;
   const theta = (lng * Math.PI) / 180;
@@ -43,11 +47,16 @@ function Entities({ radius }: { radius: number }) {
     [entities]
   );
 
+  // Planet-scale: trees/buildings tiny relative to globe (not visible from space)
+  const TREE_SCALE = 0.08;
+  const TREE_GROWTH_SCALE = 0.12;
+  const STRUCTURE_SCALE = 0.15;
+
   return (
     <group raycast={() => null}>
       {trees.map((tree) => {
         const pos = latLngToVector3(tree.lat, tree.lng, radius);
-        const scale = 1.5 + tree.growthStage * 2;
+        const scale = TREE_SCALE + tree.growthStage * TREE_GROWTH_SCALE;
         return (
           <mesh key={tree.id} position={pos}>
             <coneGeometry args={[scale, scale * 2, 6]} />
@@ -57,7 +66,7 @@ function Entities({ radius }: { radius: number }) {
       })}
       {structures.map((struct) => {
         const pos = latLngToVector3(struct.lat, struct.lng, radius);
-        const scale = 2;
+        const scale = STRUCTURE_SCALE;
         return (
           <mesh key={struct.id} position={pos}>
             <boxGeometry args={[scale, scale * 1.5, scale]} />
@@ -232,9 +241,11 @@ function ZoomScaleUpdater({
 function Scene({
   onPointClick,
   autoRotate,
+  panStrength,
 }: {
   onPointClick: (lat: number, lng: number) => void;
   autoRotate: boolean;
+  panStrength: number;
 }) {
   const globeRef = useRef<{ setPointOfView?: (camera: THREE.Camera) => void } | null>(null);
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
@@ -252,6 +263,17 @@ function Scene({
     }, 100);
     return () => clearTimeout(t);
   }, [camera]);
+
+  // Set pan and rotate speed every frame — ensures they're applied
+  useFrame(
+    () => {
+      if (controlsRef.current) {
+        controlsRef.current.panSpeed = panStrength;
+        controlsRef.current.rotateSpeed = panStrength;
+      }
+    },
+    -2
+  );
 
   const handleGlobeClick = useCallback(
     (_layer: string, _elementData: unknown, event: { point?: THREE.Vector3 }) => {
@@ -276,22 +298,23 @@ function Scene({
         atmosphereColor="lightskyblue"
         onClick={handleGlobeClick}
       />
-      <Entities radius={GLOBE_RADIUS + 2} />
+      <Entities radius={GLOBE_RADIUS + 0.15} />
       <TerraformingOverlay radius={GLOBE_RADIUS} />
       <ClickRipple radius={GLOBE_RADIUS} />
       <OrbitControls
         ref={controlsRef}
         enableZoom
         enablePan
-        minDistance={GLOBE_RADIUS * 0.2}
+        minDistance={MIN_CAMERA_DISTANCE}
         maxDistance={GLOBE_RADIUS * 8}
         autoRotate={autoRotate}
         autoRotateSpeed={0.3}
         onChange={onPovChange}
+        panSpeed={panStrength}
       />
       <ZoomScaling
         controlsRef={controlsRef}
-        minDist={GLOBE_RADIUS * 0.2}
+        minDist={MIN_CAMERA_DISTANCE}
         maxDist={GLOBE_RADIUS * 8}
       />
       <ZoomScaleUpdater controlsRef={controlsRef} maxDist={GLOBE_RADIUS * 8} />
@@ -305,12 +328,17 @@ function formatMagnification(mag: number): string {
   return `${Math.round(mag)}×`;
 }
 
+const PAN_STRENGTH_MIN = 0.5;
+const PAN_STRENGTH_MAX = 4;
+const PAN_STRENGTH_DEFAULT = 1;
+
 export function Globe({
   onPointClick,
 }: {
   onPointClick: (lat: number, lng: number) => void;
 }) {
   const [autoRotate, setAutoRotate] = useState(true);
+  const [panStrength, setPanStrength] = useState(PAN_STRENGTH_DEFAULT);
   const zoomMagnification = usePlanetStore((s) => s.zoomMagnification);
 
   return (
@@ -325,10 +353,36 @@ export function Globe({
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
-          <Scene onPointClick={onPointClick} autoRotate={autoRotate} />
+          <Scene
+            onPointClick={onPointClick}
+            autoRotate={autoRotate}
+            panStrength={panStrength}
+          />
         </Suspense>
       </Canvas>
       <div className="absolute bottom-4 right-4 z-10 flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="pan-strength"
+            className="text-xs text-white/70 whitespace-nowrap"
+          >
+            Drag strength
+          </label>
+          <input
+            id="pan-strength"
+            type="range"
+            min={PAN_STRENGTH_MIN}
+            max={PAN_STRENGTH_MAX}
+            step={0.25}
+            value={panStrength}
+            onChange={(e) => setPanStrength(parseFloat(e.target.value))}
+            className="w-24 h-2 accent-emerald-500 bg-white/20 rounded-lg appearance-none cursor-pointer"
+            title="Left-drag (rotate) and right-drag (pan) sensitivity"
+          />
+          <span className="text-xs text-white/90 tabular-nums w-8">
+            {panStrength.toFixed(1)}×
+          </span>
+        </div>
         <div
           className="rounded-lg bg-black/60 px-3 py-2 text-sm text-white/90 backdrop-blur tabular-nums"
           title="Zoom magnification (scroll to zoom)"
