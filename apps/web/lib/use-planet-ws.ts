@@ -13,7 +13,7 @@ const getWsUrl = (planetId: string) => {
 
 export function usePlanetWebSocket(planetId: string) {
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const reconnectAttempts = useRef(0);
   const {
     applySnapshot,
