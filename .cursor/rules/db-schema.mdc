@@ -1,0 +1,67 @@
+---
+description: Database schema and persistence guidelines
+globs: "**/*.sql"
+alwaysApply: false
+---
+
+# Orbis Database Schema
+
+## Overview
+
+Postgres (Neon) stores durable planet state. Schema lives in `apps/worker/schema.sql`.
+
+## Tables
+
+### `planets`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| planet_id | TEXT PRIMARY KEY | Unique planet identifier (e.g. earth-001) |
+| name | TEXT NOT NULL | Display name |
+| created_at | TIMESTAMP | Default now() |
+| seed | JSONB | Initial config (optional) |
+
+### `planet_events`
+
+Append-only event log. Never update or delete.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGSERIAL PRIMARY KEY | Auto-increment |
+| planet_id | TEXT NOT NULL | FK to planet |
+| ts | TIMESTAMP | Default now() |
+| session_id | TEXT | Anonymous session |
+| action_type | TEXT NOT NULL | e.g. INTENT_PLANT_TREE |
+| payload | JSONB | Action-specific data |
+
+**Index**: `(planet_id, ts)` for replay order.
+
+### `planet_snapshots`
+
+Periodic full state snapshots.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGSERIAL PRIMARY KEY | Auto-increment |
+| planet_id | TEXT NOT NULL | FK to planet |
+| ts | TIMESTAMP | Default now() |
+| version | INT NOT NULL | Monotonic version |
+| storage_kind | TEXT | 'inline' or 'r2' |
+| blob_key | TEXT | R2 key when storage_kind='r2' |
+| snapshot | JSONB | Inline state when storage_kind='inline' |
+
+**Indexes**: `(planet_id, version)`, `(planet_id, ts DESC)`.
+
+## Guidelines
+
+1. **All tables**: Include `planet_id` for multi-tenant isolation
+2. **Events**: Append-only; never modify after insert
+3. **Snapshots**: Create every N events (e.g. 100) or every 5 minutes
+4. **Migrations**: Run `schema.sql` manually; no ORM migrations
+5. **Queries**: Use `@neondatabase/serverless` tagged template literals; never string concatenation
+
+## Running Schema
+
+```bash
+psql $DATABASE_URL -f apps/worker/schema.sql
+```

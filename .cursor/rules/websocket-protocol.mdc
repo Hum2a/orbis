@@ -1,0 +1,48 @@
+---
+description: WebSocket message protocol and realtime patterns
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Orbis WebSocket Protocol
+
+## Message Types
+
+### Server → Client
+
+| Type | Purpose |
+|------|---------|
+| WELCOME | On connect: planetId, serverTime, tickRate, sessionId |
+| SNAPSHOT | Full state: tiles, entities, snapshotVersion |
+| DIFF | Incremental: tilesChanged, entitiesUpsert, entitiesRemove |
+| REJECTED | Intent failed: requestId, reason |
+
+### Client → Server (Intents)
+
+| Type | Payload |
+|------|---------|
+| INTENT_PLANT_TREE | requestId, planetId, lat, lng, species |
+| INTENT_WATER_TILE | requestId, planetId, tileId, amount |
+| INTENT_BUILD | requestId, planetId, lat, lng, kind |
+| PING | t (timestamp) |
+
+## Validation
+
+- **Server**: Validate all intents with Zod before applying
+- **Client**: Validate SNAPSHOT/DIFF structure; ignore malformed messages
+- **Rate limit**: 1 action per 2 seconds per session
+
+## Diff Application
+
+```typescript
+// Client: apply DIFF
+for (const t of tilesChanged) tiles[t.tileId] = t;
+for (const e of entitiesUpsert) entities[e.id] = e;
+for (const id of entitiesRemove) delete entities[id];
+```
+
+## Guidelines
+
+- Always include `planetId` in messages
+- Use `requestId` for intent correlation with REJECTED
+- Broadcast DIFF only when changes exceed threshold (avoid spam)

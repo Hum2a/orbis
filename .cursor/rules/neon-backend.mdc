@@ -1,0 +1,53 @@
+---
+description: Neon Postgres (database) usage
+globs: "apps/worker/**/*"
+alwaysApply: false
+---
+
+# Orbis Neon / Postgres Backend
+
+## Driver
+
+- **Package**: `@neondatabase/serverless`
+- **Usage**: HTTP driver (no TCP); works in Cloudflare Workers
+- **Connection**: `DATABASE_URL` env var (Neon connection string)
+
+## Client Pattern
+
+```typescript
+import { neon } from "@neondatabase/serverless";
+
+const db = neon(process.env.DATABASE_URL);
+// Use tagged template literals for queries
+await db`SELECT * FROM planets WHERE planet_id = ${planetId}`;
+```
+
+## Database Helpers (`apps/worker/src/db.ts`)
+
+| Function | Purpose |
+|----------|---------|
+| `ensurePlanet` | Upsert planet (ON CONFLICT DO NOTHING) |
+| `insertEvent` | Append to planet_events |
+| `saveSnapshot` | Insert into planet_snapshots |
+| `getLatestSnapshot` | Load latest snapshot for planet |
+| `getPlanet` | Fetch planet metadata |
+
+## Guidelines
+
+1. **Tagged templates only**: Use `` db`SELECT ...` ``; never string concatenation (SQL injection)
+2. **JSONB**: Use `JSON.stringify()` for object payloads
+3. **Null handling**: Return `null` when no rows; caller checks
+4. **Graceful fallback**: When `DATABASE_URL` unset, DB ops are no-op (in-memory only)
+
+## Schema Location
+
+`apps/worker/schema.sql` – run manually against Neon:
+
+```bash
+psql $DATABASE_URL -f apps/worker/schema.sql
+```
+
+## Environment
+
+- **Local**: `apps/worker/.dev.vars` (wrangler loads automatically)
+- **Production**: Set `DATABASE_URL` in Cloudflare Workers dashboard

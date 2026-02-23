@@ -1,0 +1,58 @@
+---
+description: TypeScript standards and implementation guidelines
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Orbis TypeScript Implementation
+
+## Strict Mode
+
+- Enable `strict: true` in all tsconfig files
+- Prefer explicit types for public APIs; infer where obvious
+- Avoid `any`; use `unknown` when type is truly unknown
+
+## Shared Types (`packages/shared`)
+
+- **Single source of truth**: All domain types live in `@orbis/shared`
+- **Const assertions**: Use `as const` for literal unions and option arrays
+- **Discriminated unions**: Use `type` field for entity/message discrimination
+
+```typescript
+// ✅ GOOD - discriminated union
+export type Entity = TreeEntity | StructureEntity;
+export function isTreeEntity(e: Entity): e is TreeEntity {
+  return e.type === "tree";
+}
+```
+
+## Zod Schemas
+
+- Validate all incoming WebSocket messages with Zod
+- Use `safeParse()` for client messages; never trust raw JSON
+- Keep schemas in `packages/shared/src/messages.ts` alongside types
+
+```typescript
+// ✅ GOOD
+const result = ClientMessageSchema.safeParse(parsed);
+if (!result.success) return;
+const msg = result.data;
+```
+
+## Imports
+
+- Use path aliases: `@/` for web app, `@orbis/shared` for shared package
+- Prefer named imports for types: `import type { Entity } from "@orbis/shared"`
+- Group: external packages → internal packages → relative
+
+## Async & Promises
+
+- Prefer `async/await` over raw `.then()`
+- Handle errors explicitly; avoid empty catch blocks
+- Use `Promise<void>` for fire-and-forget when appropriate
+
+## React
+
+- Use `"use client"` only when needed (hooks, browser APIs, event handlers)
+- Prefer `useCallback` and `useMemo` for stable references passed to children
+- Type props explicitly: `{ onPointClick: (lat: number, lng: number) => void }`

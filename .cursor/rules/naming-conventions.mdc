@@ -1,0 +1,76 @@
+---
+description: Naming conventions for Orbis codebase
+globs: "**/*.{ts,tsx,js,jsx,sql}"
+alwaysApply: false
+---
+
+# Orbis Naming Conventions
+
+## General Principles
+
+- Use **camelCase** for variables, functions, and object properties
+- Use **PascalCase** for types, interfaces, classes, and React components
+- Use **SCREAMING_SNAKE_CASE** for constants and enum-like values
+- Use **kebab-case** for file names and URL segments
+
+## Files & Directories
+
+| Type | Convention | Example |
+|------|------------|---------|
+| React components | PascalCase | `Globe.tsx`, `PlanetPage.tsx` |
+| Hooks | camelCase with `use` prefix | `use-planet-ws.ts`, `usePlanetWebSocket` |
+| Utilities/lib | kebab-case or camelCase | `planet-store.ts`, `latlng.ts` |
+| Types | colocate with domain | `types.ts` in shared package |
+
+## Identifiers
+
+### Variables & Functions
+
+```typescript
+// ✅ GOOD
+const planetId = "earth-001";
+const tileIdFromLatLng = (lat, lng) => ...;
+function applyDiff(data) { ... }
+
+// ❌ BAD
+const PlanetID = "earth-001";
+const tile_id_from_lat_lng = ...;
+```
+
+### Types & Interfaces
+
+```typescript
+// ✅ GOOD - PascalCase, descriptive
+interface TileState { ... }
+type TreeEntity = ...;
+type Biome = "ocean" | "desert" | ...;
+
+// ❌ BAD
+interface tile_state { ... }
+type tree = ...;
+```
+
+### Constants
+
+```typescript
+// ✅ GOOD
+const TILE_SIZE_DEG = 5;
+const SMALL_TICK_MS = 2000;
+const BIOME_OPTIONS = ["ocean", "desert", ...] as const;
+```
+
+## Database
+
+- **Tables**: `snake_case` plural (e.g. `planet_events`, `planet_snapshots`)
+- **Columns**: `snake_case` (e.g. `planet_id`, `created_at`, `action_type`)
+- **Indexes**: `idx_<table>_<columns>` (e.g. `idx_planet_events_planet_ts`)
+
+## WebSocket Messages
+
+- **Message types**: `SCREAMING_SNAKE_CASE` (e.g. `WELCOME`, `SNAPSHOT`, `DIFF`, `INTENT_PLANT_TREE`)
+- **Payload keys**: `camelCase` for JSON (e.g. `planetId`, `snapshotVersion`, `tilesChanged`)
+
+## Planet & Entity IDs
+
+- **planetId**: `kebab-case` with optional suffix (e.g. `earth-001`, `mars-001`)
+- **Entity IDs**: `type-uuid` (e.g. `tree-abc123`, `struct-xyz789`)

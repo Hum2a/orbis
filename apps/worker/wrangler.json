@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "orbis-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-01",
+  "vars": {
+    "DEFAULT_PLANET_ID": "earth-001"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PLANET_DO",
+        "class_name": "PlanetDO"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["PlanetDO"]
+    }
+  ]
+}

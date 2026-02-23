@@ -1,0 +1,6 @@
+# Copy to .dev.vars and fill in values
+# .dev.vars is gitignored
+
+DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
+ADMIN_SECRET=your-secret
+DEFAULT_PLANET_ID=earth-001

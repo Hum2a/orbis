@@ -1,0 +1,56 @@
+---
+description: Cloudflare Worker and Durable Object guidelines
+globs: "apps/worker/**/*"
+alwaysApply: false
+---
+
+# Orbis Cloudflare Backend
+
+## Architecture
+
+- **Worker**: Routes HTTP and WebSocket to Planet Durable Objects
+- **PlanetDO**: One Durable Object instance per `planetId` (sharding)
+- **No Redis**: State is in-memory in DO; Postgres for persistence
+
+## Worker (`apps/worker/src/index.ts`)
+
+- **WebSocket**: Upgrade at `/api/ws?planetId=earth-001` → forward to PlanetDO
+- **HTTP**: `/api/planets/:planetId` → metadata; `/api/planets/:planetId/snapshot/latest` → full snapshot
+- **Admin**: `POST /api/planets` with `Authorization: Bearer ADMIN_SECRET`
+
+## Durable Object (`PlanetDO`)
+
+### Responsibilities
+
+- **State**: `tiles: Map<tileId, TileState>`, `entities: Map<entityId, Entity>`
+- **WebSockets**: Accept connections; send WELCOME + SNAPSHOT on join; broadcast DIFF on changes
+- **Validation**: Rate limit (2s cooldown), bounds check lat/lng, max entities per tile
+- **Ticks**: `alarm()` every 2s (small tick); every 30th tick = big tick (60s)
+- **Persistence**: Insert events to Postgres; snapshot every N events
+
+### Alarms
+
+```typescript
+async alarm(): Promise<void> {
+  this.runSmallTick();
+  if (/* big tick time */) this.runBigTick();
+  this.ctx.storage.setAlarm(Date.now() + SMALL_TICK_MS);
+}
+```
+
+### WebSocket Flow
+
+1. Client connects → DO accepts, sends WELCOME + SNAPSHOT
+2. Client sends INTENT_* → validate → apply → broadcast DIFF → record event
+3. On tick → compute diffs → broadcast if changed
+
+## Config
+
+- `wrangler.json`: `PLANET_DO` binding, `durable_objects` migrations
+- `.dev.vars`: `DATABASE_URL`, `ADMIN_SECRET`, `DEFAULT_PLANET_ID` (gitignored)
+
+## Guidelines
+
+- Always scope by `planetId`; never assume single planet
+- Use `idFromName(planetId)` for DO routing
+- Handle DB absence gracefully (no-op when `DATABASE_URL` unset)

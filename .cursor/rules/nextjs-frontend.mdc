@@ -1,0 +1,44 @@
+---
+description: Next.js and frontend patterns
+globs: "apps/web/**/*"
+alwaysApply: false
+---
+
+# Orbis Next.js Frontend
+
+## Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **3D**: Three.js + @react-three/fiber + @react-three/drei
+- **State**: Zustand (planet store), TanStack Query (optional for HTTP)
+- **Styling**: Tailwind CSS v4
+
+## App Router
+
+- **Routes**: `/` (home), `/planet/[planetId]` (globe view)
+- **Client components**: Use `"use client"` for hooks, WebSocket, event handlers
+- **Layout**: Root layout wraps with QueryClientProvider
+
+## Globe Component
+
+- **Canvas**: `@react-three/fiber` Canvas with OrbitControls
+- **Click → lat/lng**: Raycast from NDC to sphere; convert to lat/lng
+- **Entities**: Trees (cones), structures (boxes) at lat/lng positions
+
+## WebSocket
+
+- **Hook**: `usePlanetWebSocket(planetId)` – connect, reconnect with backoff
+- **URL**: `NEXT_PUBLIC_WS_URL` or `http://localhost:8787` for local
+- **Messages**: Apply SNAPSHOT to Zustand; apply DIFF incrementally
+
+## State Flow
+
+1. Connect → receive SNAPSHOT → `applySnapshot()` to store
+2. Receive DIFF → `applyDiff()` (upsert tiles/entities, remove entities)
+3. User clicks → send INTENT_* based on action mode
+
+## Guidelines
+
+- Keep 3D logic in `components/Globe.tsx`; page handles UI and intents
+- Use `@/` path alias for imports
+- Prefer `useCallback` for handlers passed to Canvas/globe

@@ -1,0 +1,19 @@
+{
+  "name": "@orbis/worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "echo 'Run schema.sql against your Neon Postgres (see README)'"
+  },
+  "dependencies": {
+    "@orbis/shared": "*",
+    "@neondatabase/serverless": "^0.10.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5",
+    "wrangler": "^3.91.0"
+  }
+}

@@ -1,0 +1,88 @@
+---
+description: Repository structure and file organization
+globs: "**/*"
+alwaysApply: true
+---
+
+# Orbis File Organization
+
+## Monorepo Layout
+
+```
+orbis/
+├── apps/
+│   ├── web/          # Next.js frontend
+│   └── worker/       # Cloudflare Worker + Durable Objects
+├── packages/
+│   └── shared/       # Types, Zod schemas, tile/entity definitions
+├── .cursor/
+│   └── rules/        # Cursor AI guidelines
+├── package.json      # Workspace root
+└── README.md
+```
+
+## Workspace Packages
+
+| Package | Purpose |
+|---------|---------|
+| `@orbis/web` | Next.js App Router, Three.js globe, Zustand, TanStack Query |
+| `@orbis/worker` | Cloudflare Worker, Planet Durable Object, Neon DB client |
+| `@orbis/shared` | Shared types, Zod schemas, tile/entity definitions |
+
+## Apps
+
+### `apps/web`
+
+```
+app/
+├── layout.tsx
+├── page.tsx
+├── providers.tsx
+├── planet/
+│   └── [planetId]/
+│       └── page.tsx
+├── globals.css
+components/
+├── Globe.tsx
+lib/
+├── planet-store.ts
+├── use-planet-ws.ts
+├── latlng.ts
+```
+
+- `app/` – Next.js App Router pages and layouts
+- `components/` – Reusable React components
+- `lib/` – Hooks, stores, utilities
+
+### `apps/worker`
+
+```
+src/
+├── index.ts
+├── PlanetDO.ts
+├── db.ts
+├── env.d.ts
+schema.sql
+wrangler.json
+```
+
+- `src/` – Worker entry point, Durable Object, DB helpers
+- `schema.sql` – Postgres schema (run manually)
+
+### `packages/shared`
+
+```
+src/
+├── index.ts
+├── types.ts
+├── messages.ts
+```
+
+- `types.ts` – TileState, Entity, PlanetSnapshot, etc.
+- `messages.ts` – Zod schemas for WebSocket messages
+
+## Import Rules
+
+- Use `@orbis/shared` for types; never duplicate in apps
+- Use `@/` alias in web app for `apps/web` root
+- Avoid cross-app imports

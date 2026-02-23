@@ -1,0 +1,3 @@
+{
+  "/planet/[planetId]/page": "app/planet/[planetId]/page.js"
+}
