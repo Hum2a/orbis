@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useCallback, Suspense, useState, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import R3fGlobe from "r3f-globe";
 import * as THREE from "three";
@@ -57,21 +57,67 @@ function Entities({ radius }: { radius: number }) {
       {trees.map((tree) => {
         const pos = latLngToVector3(tree.lat, tree.lng, radius);
         const scale = TREE_SCALE + tree.growthStage * TREE_GROWTH_SCALE;
+        const stage = Math.min(4, Math.floor(tree.growthStage * 4) + 1);
+        const label = `${tree.species} tree · Stage ${stage}`;
         return (
-          <mesh key={tree.id} position={pos}>
-            <coneGeometry args={[scale, scale * 2, 6]} />
-            <meshStandardMaterial color="#2d5a27" />
-          </mesh>
+          <group key={tree.id} position={pos}>
+            <mesh>
+              <coneGeometry args={[scale, scale * 2, 6]} />
+              <meshStandardMaterial color="#2d5a27" />
+            </mesh>
+            <group position={[0, scale * 2 + 0.5, 0]}>
+              <Html
+              center
+              distanceFactor={12}
+              style={{
+                pointerEvents: "none",
+                userSelect: "none",
+                whiteSpace: "nowrap",
+                fontSize: 11,
+                padding: "2px 6px",
+                background: "rgba(10, 15, 26, 0.9)",
+                border: "1px solid rgba(232, 237, 245, 0.2)",
+                borderRadius: 4,
+                color: "#e8edf5",
+              }}
+            >
+                {label}
+              </Html>
+            </group>
+          </group>
         );
       })}
       {structures.map((struct) => {
         const pos = latLngToVector3(struct.lat, struct.lng, radius);
         const scale = STRUCTURE_SCALE;
+        const kindLabel =
+          struct.kind.charAt(0).toUpperCase() + struct.kind.slice(1);
         return (
-          <mesh key={struct.id} position={pos}>
-            <boxGeometry args={[scale, scale * 1.5, scale]} />
-            <meshStandardMaterial color="#8b7355" />
-          </mesh>
+          <group key={struct.id} position={pos}>
+            <mesh>
+              <boxGeometry args={[scale, scale * 1.5, scale]} />
+              <meshStandardMaterial color="#8b7355" />
+            </mesh>
+            <group position={[0, scale * 1.5 * 0.5 + 0.5, 0]}>
+              <Html
+              center
+              distanceFactor={12}
+              style={{
+                pointerEvents: "none",
+                userSelect: "none",
+                whiteSpace: "nowrap",
+                fontSize: 11,
+                padding: "2px 6px",
+                background: "rgba(10, 15, 26, 0.9)",
+                border: "1px solid rgba(232, 237, 245, 0.2)",
+                borderRadius: 4,
+                color: "#e8edf5",
+              }}
+            >
+                {kindLabel}
+              </Html>
+            </group>
+          </group>
         );
       })}
     </group>

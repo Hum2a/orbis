@@ -1,12 +1,22 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Globe } from "@/components/Globe";
 import { usePlanetWebSocket } from "@/lib/use-planet-ws";
 import { usePlanetStore } from "@/lib/planet-store";
 import { tileIdFromLatLng } from "@orbis/shared";
+
+const Map2D = dynamic(() => import("@/components/Map2D").then((m) => m.Map2D), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-[#0a0f1a] text-zinc-400">
+      Loading map…
+    </div>
+  ),
+});
 
 function EpicDailyCard() {
   const { data, isLoading } = useQuery({
@@ -86,10 +96,29 @@ export default function PlanetPage() {
   );
 
   const setActionMode = usePlanetStore((s) => s.setActionMode);
+  const [viewMode, setViewMode] = useState<"2d" | "3d">("3d");
+  const [mapKey, setMapKey] = useState(0);
+
+  const setViewModeAndKey = useCallback((mode: "2d" | "3d") => {
+    if (mode === "2d") setMapKey((k) => k + 1);
+    setViewMode(mode);
+  }, []);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
-      <Globe onPointClick={handlePointClick} />
+      {viewMode === "3d" ? (
+        <Globe onPointClick={handlePointClick} />
+      ) : (
+        <Suspense
+          fallback={
+            <div className="absolute inset-0 flex items-center justify-center bg-[#0a0f1a] text-zinc-400">
+              Loading map…
+            </div>
+          }
+        >
+          <Map2D key={mapKey} onPointClick={handlePointClick} />
+        </Suspense>
+      )}
 
       <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
         <div className="rounded-lg bg-black/60 px-4 py-2 text-sm text-white backdrop-blur">
@@ -114,8 +143,23 @@ export default function PlanetPage() {
             </button>
           ))}
         </div>
+        <div className="flex gap-2">
+          {(["2d", "3d"] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewModeAndKey(mode)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium uppercase transition-colors ${
+                viewMode === mode
+                  ? "bg-emerald-600 text-white"
+                  : "bg-black/40 text-zinc-300 hover:bg-black/60"
+              }`}
+            >
+              {mode === "2d" ? "2D Map" : "3D Globe"}
+            </button>
+          ))}
+        </div>
         <p className="max-w-[200px] text-xs text-zinc-500">
-          Click the globe to {actionMode}. Trees grow over time; water helps them.
+          Click the {viewMode === "3d" ? "globe" : "map"} to {actionMode}. Trees grow over time; water helps them.
         </p>
         <EpicDailyCard />
       </div>
