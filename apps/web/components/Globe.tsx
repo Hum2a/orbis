@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useMemo, useCallback, Suspense } from "react";
+import { useRef, useMemo, useCallback, Suspense, useState, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import R3fGlobe from "r3f-globe";
 import * as THREE from "three";
 import { usePlanetStore } from "@/lib/planet-store";
@@ -173,24 +174,84 @@ function TerraformingOverlay({ radius }: { radius: number }) {
   );
 }
 
-function PovUpdater({
-  globeRef,
-}: {
-  globeRef: React.RefObject<{ setPointOfView?: (camera: THREE.Camera) => void } | null>;
-}) {
+function usePovOnChange(
+  globeRef: React.RefObject<{ setPointOfView?: (camera: THREE.Camera) => void } | null>
+) {
   const { camera } = useThree();
+  return useCallback(() => {
+    try {
+      globeRef.current?.setPointOfView?.(camera);
+    } catch {
+      // Ignore - three-globe tile engine may not be ready (avoids __kapsuleInstance error)
+    }
+  }, [camera, globeRef]);
+}
+
+// Scale zoom sensitivity: when zoomed in (small distance), scroll does less
+function ZoomScaling({
+  controlsRef,
+  minDist,
+  maxDist,
+}: {
+  controlsRef: React.RefObject<OrbitControlsImpl | null>;
+  minDist: number;
+  maxDist: number;
+}) {
+  useFrame(
+    () => {
+      const ctrl = controlsRef.current;
+      if (!ctrl) return;
+      const dist = ctrl.target.distanceTo(ctrl.object.position);
+      // Linear blend: at minDist use 0.25x, at maxDist use 1x
+      const t = Math.max(0, Math.min(1, (dist - minDist) / (maxDist - minDist)));
+      ctrl.zoomSpeed = 0.25 + 0.75 * t;
+    },
+    -2 // Run before OrbitControls (-1) so zoomSpeed is set when scroll is processed
+  );
+  return null;
+}
+
+function ZoomScaleUpdater({
+  controlsRef,
+  maxDist,
+}: {
+  controlsRef: React.RefObject<OrbitControlsImpl | null>;
+  maxDist: number;
+}) {
+  const setZoomMagnification = usePlanetStore((s) => s.setZoomMagnification);
   useFrame(() => {
-    globeRef.current?.setPointOfView?.(camera);
+    const ctrl = controlsRef.current;
+    if (!ctrl) return;
+    const dist = ctrl.target.distanceTo(ctrl.object.position);
+    const mag = Math.max(1, maxDist / dist);
+    setZoomMagnification(mag);
   });
   return null;
 }
 
 function Scene({
   onPointClick,
+  autoRotate,
 }: {
   onPointClick: (lat: number, lng: number) => void;
+  autoRotate: boolean;
 }) {
   const globeRef = useRef<{ setPointOfView?: (camera: THREE.Camera) => void } | null>(null);
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
+  const onPovChange = usePovOnChange(globeRef);
+
+  // Initial POV sync after mount (onChange may not fire until user interacts)
+  const { camera } = useThree();
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        globeRef.current?.setPointOfView?.(camera);
+      } catch {
+        // Ignore
+      }
+    }, 100);
+    return () => clearTimeout(t);
+  }, [camera]);
 
   const handleGlobeClick = useCallback(
     (_layer: string, _elementData: unknown, event: { point?: THREE.Vector3 }) => {
@@ -215,20 +276,33 @@ function Scene({
         atmosphereColor="lightskyblue"
         onClick={handleGlobeClick}
       />
-      <PovUpdater globeRef={globeRef} />
       <Entities radius={GLOBE_RADIUS + 2} />
       <TerraformingOverlay radius={GLOBE_RADIUS} />
       <ClickRipple radius={GLOBE_RADIUS} />
       <OrbitControls
+        ref={controlsRef}
         enableZoom
         enablePan
         minDistance={GLOBE_RADIUS * 0.2}
         maxDistance={GLOBE_RADIUS * 8}
-        autoRotate
+        autoRotate={autoRotate}
         autoRotateSpeed={0.3}
+        onChange={onPovChange}
       />
+      <ZoomScaling
+        controlsRef={controlsRef}
+        minDist={GLOBE_RADIUS * 0.2}
+        maxDist={GLOBE_RADIUS * 8}
+      />
+      <ZoomScaleUpdater controlsRef={controlsRef} maxDist={GLOBE_RADIUS * 8} />
     </>
   );
+}
+
+function formatMagnification(mag: number): string {
+  if (mag < 1.1) return "1×";
+  if (mag < 10) return `${mag.toFixed(1)}×`;
+  return `${Math.round(mag)}×`;
 }
 
 export function Globe({
@@ -236,6 +310,9 @@ export function Globe({
 }: {
   onPointClick: (lat: number, lng: number) => void;
 }) {
+  const [autoRotate, setAutoRotate] = useState(true);
+  const zoomMagnification = usePlanetStore((s) => s.zoomMagnification);
+
   return (
     <div className="absolute inset-0 bg-[#0a0f1a]">
       <Canvas
@@ -248,9 +325,25 @@ export function Globe({
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
-          <Scene onPointClick={onPointClick} />
+          <Scene onPointClick={onPointClick} autoRotate={autoRotate} />
         </Suspense>
       </Canvas>
+      <div className="absolute bottom-4 right-4 z-10 flex items-center gap-3">
+        <div
+          className="rounded-lg bg-black/60 px-3 py-2 text-sm text-white/90 backdrop-blur tabular-nums"
+          title="Zoom magnification (scroll to zoom)"
+        >
+          Scale: {formatMagnification(zoomMagnification)}
+        </div>
+        <button
+          type="button"
+          onClick={() => setAutoRotate((v) => !v)}
+          className="rounded-lg bg-black/60 px-3 py-2 text-sm text-white backdrop-blur hover:bg-black/80 transition-colors"
+          title={autoRotate ? "Stop rotation" : "Start rotation"}
+        >
+          {autoRotate ? "⟳ Rotating" : "⏸ Paused"}
+        </button>
+      </div>
     </div>
   );
 }

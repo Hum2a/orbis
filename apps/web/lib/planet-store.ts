@@ -20,6 +20,7 @@ interface PlanetState {
   connected: boolean;
   actionMode: "plant" | "water" | "build";
   lastActionEffect: ActionEffect | null;
+  zoomMagnification: number;
 
   setConnected: (connected: boolean) => void;
   setSessionId: (id: string) => void;
@@ -40,6 +41,7 @@ interface PlanetState {
     entitiesRemove: string[];
   }) => void;
   setActionMode: (mode: "plant" | "water" | "build") => void;
+  setZoomMagnification: (mag: number) => void;
   reset: () => void;
 }
 
@@ -53,6 +55,7 @@ const initialState = {
   connected: false,
   actionMode: "plant" as const,
   lastActionEffect: null as ActionEffect | null,
+  zoomMagnification: 1,
 };
 
 export const usePlanetStore = create<PlanetState>((set) => ({
@@ -83,6 +86,7 @@ export const usePlanetStore = create<PlanetState>((set) => ({
       return { tiles, entities, serverTime };
     }),
   setActionMode: (actionMode) => set({ actionMode }),
+  setZoomMagnification: (zoomMagnification) => set({ zoomMagnification }),
   triggerActionEffect: (lat, lng, type) =>
     set({ lastActionEffect: { lat, lng, type, timestamp: Date.now() } }),
   clearActionEffect: () => set({ lastActionEffect: null }),
